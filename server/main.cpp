@@ -35,7 +35,7 @@ public:
         // °ó¶¨IPÓë¶Ë¿Ú
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(8888);
-        serverAddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+        serverAddr.sin_addr.S_un.S_addr = INADDR_ANY;
         if (bind(sListen, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
         {
             cout << "bind error!\n";

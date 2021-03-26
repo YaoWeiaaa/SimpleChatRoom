@@ -38,12 +38,13 @@ public:
         // 服务器网络地址信息
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_port = htons(8888);
-        serverAddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+        serverAddr.sin_addr.S_un.S_addr = inet_addr("1.15.227.247");
 
         // 连接 
         if (connect(clientSocket, (sockaddr *)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR)
         {
             cout << "unable to connect to the server!\n";
+            cout << "Error code:" << WSAGetLastError();
             getchar();
             closesocket(clientSocket);
             assert(0);
