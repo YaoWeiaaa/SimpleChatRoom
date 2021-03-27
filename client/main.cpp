@@ -90,8 +90,6 @@ public:
 int main()
 {
     Client client;
-    
-    getchar();
 
     return 0;
 }

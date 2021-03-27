@@ -12,7 +12,7 @@ class Server
 private:
     SOCKET sListen;         // 监听套接字
     sockaddr_in serverAddr; // 服务器网络地址
-    char buf[4096];          // 接受数据
+    char buf[4096];         // 接受数据
 public:
     Server()
     {
@@ -50,7 +50,7 @@ public:
             closesocket(sListen);
             assert(0);
         }
-		cout << "           Server\n";
+        cout << "           Server\n";
         cout << "****************************\n";
         cout << "waiting for being connected!\n";
 
@@ -64,17 +64,15 @@ public:
         fd_set writeSet;
         FD_ZERO(&readSet);
 
-        map<int, sockaddr_in> addrs; // 使用map存储socket与socket_addr的键值对 
-        
+        map<int, sockaddr_in> addrs; // 使用map存储socket与socket_addr的键值对
 
         while (1)
         {
             readSet = socketSet;
             writeSet = socketSet;
-            
+
             Sleep(30);
             int nRetAll = select(0, &readSet, &writeSet, NULL, NULL); // 检查套接字的可读可写性
-            
 
             if (nRetAll > 0)
             {
@@ -90,7 +88,7 @@ public:
                         {
                             FD_SET(sClient, &socketSet); // 将该socket加入socketSet
                             // 确定该socket在socketSet中的下标
-                            for(int i = 0; i < socketSet.fd_count; i++)
+                            for (int i = 0; i < socketSet.fd_count; i++)
                             {
                                 if (FD_ISSET(socketSet.fd_array[i], &readSet))
                                 {
@@ -109,49 +107,50 @@ public:
                 }
 
                 // 轮询socketSet中的每个套接字
-                for(int i = 0; i < socketSet.fd_count; i++)
+                for (int i = 0; i < socketSet.fd_count; i++)
                 {
                     // 是否具可读性
-                    if(FD_ISSET(socketSet.fd_array[i], &readSet) )
-                    {  
+                    if (FD_ISSET(socketSet.fd_array[i], &readSet))
+                    {
                         //调用recv，接收数据 flag = 0 阻塞接受
-                        memset(buf, 0 , 4096);
+                        memset(buf, 0, 4096);
                         int sender = i;
                         int nRecv = recv(socketSet.fd_array[i], buf, 4096, 0);
-                        if(nRecv > 0)
+                        if (nRecv > 0)
                         {
                             buf[nRecv] = 0;
-                            cout << "user" << i << '(' << inet_ntoa(addrs[socketSet.fd_array[i]].sin_addr) << "):" << buf << endl;
+                            cout << inet_ntoa(addrs[socketSet.fd_array[i]].sin_addr) << ":" << buf << endl;
 
                             // 广播
-                        for(int i = 0; i < socketSet.fd_count; i++)
-                        {
-                            if (socketSet.fd_array[i] == sListen || i == sender)
-                            {
-                                continue;
-                            }
                             char writeBuf[4096];
                             strcpy(writeBuf, inet_ntoa(addrs[socketSet.fd_array[i]].sin_addr));
                             strcpy(writeBuf + strlen(writeBuf), "：");
                             strcpy(writeBuf + strlen(writeBuf), buf);
-                            int nRet = send(socketSet.fd_array[i], writeBuf, strlen(writeBuf)+1, 0);
-                            if(nRet <= 0)  
+                            for (int i = 0; i < socketSet.fd_count; i++)
                             {
-                                // 通过send结果判断连接情况
-                                if(GetLastError() == WSAEWOULDBLOCK)  
-                                {  
-                                    //do nothing  
-                                }  
-                                else  
-                                {  
-                                    cout << inet_ntoa(addrs[socketSet.fd_array[i]].sin_addr) << " has disconnected!\n";
-                                    closesocket(socketSet.fd_array[i]);   
-                                    FD_CLR(socketSet.fd_array[i],&socketSet);  
-                                }   
+                                if (socketSet.fd_array[i] == sListen || i == sender)
+                                {
+                                    continue;
+                                }
+                                int nRet = send(socketSet.fd_array[i], writeBuf, strlen(writeBuf) + 1, 0);
+                                if (nRet <= 0)
+                                {
+                                    // 通过send结果判断连接情况
+                                    if (GetLastError() == WSAEWOULDBLOCK)
+                                    {
+                                        //do nothing
+                                    }
+                                    else
+                                    {
+                                        cout << inet_ntoa(addrs[socketSet.fd_array[i]].sin_addr) << " has disconnected!\n";
+                                        closesocket(socketSet.fd_array[i]);
+                                        FD_CLR(socketSet.fd_array[i], &socketSet);
+                                        addrs.erase(socketSet.fd_array[i]);
+                                    }
+                                }
                             }
                         }
-                        }
-                    } 
+                    }
                 }
             }
         }
